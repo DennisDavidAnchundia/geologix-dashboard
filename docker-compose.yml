@@ -7,9 +7,11 @@ services:
       POSTGRES_PASSWORD: geologix
       POSTGRES_DB: geologix
     ports:
-      - "5432:5432"
+      # 5433 en el host para no chocar con un PostgreSQL local que ya usa 5432.
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./infra/initdb:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U geologix -d geologix"]
       interval: 5s

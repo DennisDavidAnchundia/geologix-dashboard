@@ -59,9 +59,24 @@ public class VehicleController {
                 .toList();
     }
 
+    /**
+     * Devuelve la distancia total recorrida (km) por un vehículo, calculada con PostGIS.
+     * Requiere el perfil 'postgis' (PostgreSQL con la extensión PostGIS).
+     */
+    @GetMapping("/{id}/distance")
+    public DistanceDto distance(@PathVariable Long id) {
+        Vehicle vehicle = findVehicle(id);
+        double km = positionRepository.distanciaRecorridaKm(vehicle.getId());
+        return new DistanceDto(vehicle.getId(), vehicle.getPlaca(), km);
+    }
+
     private Vehicle findVehicle(Long id) {
         return vehicleRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Vehículo no encontrado con id " + id));
+    }
+
+    /** Distancia recorrida (km) por un vehículo. */
+    public record DistanceDto(Long vehicleId, String placa, double distanciaKm) {
     }
 }
