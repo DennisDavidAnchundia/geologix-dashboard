@@ -13,7 +13,7 @@ function App() {
       try {
         const res = await fetch('/api/vehicles');
         const data = await res.json();
-        setInitialVehicles(data.value || []);
+        setInitialVehicles(Array.isArray(data) ? data : []);
       } catch (e) {
         console.error('Error cargando flota:', e);
       }
