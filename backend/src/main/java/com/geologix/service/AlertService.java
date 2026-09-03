@@ -24,10 +24,12 @@ public class AlertService {
     private static final Logger log = LoggerFactory.getLogger(AlertService.class);
 
     private final AlertRepository alertRepository;
+    private final RealtimePublisher publisher;
     private final SimulationProperties properties;
 
-    public AlertService(AlertRepository alertRepository, SimulationProperties properties) {
+    public AlertService(AlertRepository alertRepository, RealtimePublisher publisher, SimulationProperties properties) {
         this.alertRepository = alertRepository;
+        this.publisher = publisher;
         this.properties = properties;
     }
 
@@ -74,6 +76,7 @@ public class AlertService {
                 .timestamp(Instant.now())
                 .build();
         alertRepository.save(alerta);
+        publisher.publicarAlerta(alerta);
         log.warn("ALERTA {} para {}: {}", tipo, vehicle.getPlaca(), mensaje);
     }
 

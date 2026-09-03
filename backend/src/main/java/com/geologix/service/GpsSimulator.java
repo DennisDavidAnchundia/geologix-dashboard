@@ -38,6 +38,7 @@ public class GpsSimulator {
     private final PositionRepository positionRepository;
     private final RouteService routeService;
     private final AlertService alertService;
+    private final RealtimePublisher publisher;
     private final SimulationProperties properties;
 
     /** Acumulado (km) recorrido por cada vehículo a lo largo de su ruta. */
@@ -49,11 +50,13 @@ public class GpsSimulator {
                         PositionRepository positionRepository,
                         RouteService routeService,
                         AlertService alertService,
+                        RealtimePublisher publisher,
                         SimulationProperties properties) {
         this.vehicleRepository = vehicleRepository;
         this.positionRepository = positionRepository;
         this.routeService = routeService;
         this.alertService = alertService;
+        this.publisher = publisher;
         this.properties = properties;
     }
 
@@ -85,6 +88,7 @@ public class GpsSimulator {
                     .timestamp(Instant.now())
                     .build();
             positionRepository.save(position);
+            publisher.publicarPosicion(position);
 
             VehicleStatus estado = moving ? VehicleStatus.ACTIVO : VehicleStatus.DETENIDO;
             if (vehicle.getEstado() != estado) {
