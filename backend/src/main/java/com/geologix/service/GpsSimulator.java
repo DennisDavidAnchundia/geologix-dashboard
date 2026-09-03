@@ -45,6 +45,8 @@ public class GpsSimulator {
     private final Map<Long, Double> progressKm = new HashMap<>();
     /** Velocidad de crucero objetivo (km/h) de cada vehículo. */
     private final Map<Long, Double> objetivoSpeeds = new HashMap<>();
+    /** Siguiente tick en el que cada vehículo cambiará su velocidad objetivo. */
+    private final Map<Long, Long> cambioVelocidadEn = new HashMap<>();
 
     public GpsSimulator(VehicleRepository vehicleRepository,
                         PositionRepository positionRepository,
@@ -101,23 +103,36 @@ public class GpsSimulator {
     }
 
     /**
-     * Devuelve la velocidad objetivo del vehículo. La primera vez la asigna de forma
-     * pseudoaleatoria dentro de un rango urbano realista; algunos vehículos superan el
-     * límite para ejercitar el motor de alertas de exceso de velocidad.
+     * Devuelve la velocidad objetivo del vehículo. La velocidad no es fija: cada
+     * cierto tiempo el conductor "acelera" o "frena" (nueva velocidad objetivo),
+     * lo que hace que los vehículos crucen el límite de velocidad de forma variable
+     * y generen alertas NUEVAS de exceso de velocidad en tiempo real.
      */
     private double objetivoSpeed(Long vehicleId) {
-        return objetivoSpeeds.computeIfAbsent(vehicleId, id -> {
-            double limite = properties.getSpeedLimitKmh();
-            double velocidad;
-            if (ThreadLocalRandom.current().nextBoolean()) {
-                // Conductor prudente: entre 40 y el límite.
-                velocidad = 40 + ThreadLocalRandom.current().nextDouble(0, Math.max(1, limite - 40));
-            } else {
-                // Conductor que excede el límite: hasta +25% por encima.
-                velocidad = limite + ThreadLocalRandom.current().nextDouble(0, limite * 0.25);
-            }
-            return Math.round(velocidad * 100) / 100.0;
-        });
+        long now = System.currentTimeMillis();
+        boolean tocaCambiar = now >= cambioVelocidadEn.getOrDefault(vehicleId, 0L);
+        if (!objetivoSpeeds.containsKey(vehicleId) || tocaCambiar) {
+            double velocidad = nuevaVelocidadObjetivo();
+            objetivoSpeeds.put(vehicleId, velocidad);
+            // Cambia la velocidad cada 15-30 s (demos nuevos datos y alertas).
+            cambioVelocidadEn.put(vehicleId, now + 15_000
+                    + ThreadLocalRandom.current().nextLong(0, 15_000));
+        }
+        return objetivoSpeeds.get(vehicleId);
+    }
+
+    /** Asigna una velocidad objetivo pseudoaleatoria dentro de un rango urbano realista. */
+    private double nuevaVelocidadObjetivo() {
+        double limite = properties.getSpeedLimitKmh();
+        double velocidad;
+        if (ThreadLocalRandom.current().nextBoolean()) {
+            // Conductor prudente: entre 40 y el límite.
+            velocidad = 40 + ThreadLocalRandom.current().nextDouble(0, Math.max(1, limite - 40));
+        } else {
+            // Conductor que excede el límite: hasta +25% por encima.
+            velocidad = limite + ThreadLocalRandom.current().nextDouble(0, limite * 0.25);
+        }
+        return Math.round(velocidad * 100) / 100.0;
     }
 
     /** Longitud total (km) de una polilínea de ruta. */

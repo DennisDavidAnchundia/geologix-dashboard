@@ -1,0 +1,46 @@
+{
+  "app": {
+    "title": "GeoLogix",
+    "subtitle": "Dashboard GIS"
+  },
+  "connection": {
+    "live": "Conexión en vivo",
+    "offline": "Desconectado"
+  },
+  "kpi": {
+    "vehicles": "Vehículos",
+    "active": "Activos",
+    "avgSpeed": "Vel. Promedio",
+    "alerts": "Alertas",
+    "unit": "km/h",
+    "deliveries": "Entregas a tiempo"
+  },
+  "alerts": {
+    "title": "Alertas en Tiempo Real",
+    "active": "Alertas activas",
+    "empty": "Sin alertas",
+    "filterActive": "Solo activas",
+    "filterAll": "Todas",
+    "severity": {
+      "ALTA": "Alta",
+      "MEDIA": "Media",
+      "BAJA": "Baja"
+    }
+  },
+  "fleet": {
+    "title": "Flota de Vehículos",
+    "vehicle": "Camión",
+    "speed": "Velocidad",
+    "status": "Estado",
+    "ignition": "Motor",
+    "on": "Encendido",
+    "off": "Apagado",
+    "lat": "Lat",
+    "lon": "Lon",
+    "analytics": "Velocidad de la flota (en vivo)"
+  },
+  "map": {
+    "speed": "Velocidad",
+    "vehicleLabel": "Vehículo"
+  }
+}

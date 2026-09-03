@@ -9,7 +9,24 @@ export function useWebSocket() {
   const [vehicles, setVehicles] = useState({});
   const [alerts, setAlerts] = useState([]);
 
+  const loadInitialAlerts = useCallback(() => {
+    fetch('/api/alerts?activa=true')
+      .then(res => res.json())
+      .then(list => {
+        if (Array.isArray(list) && list.length) {
+          setAlerts(prev => {
+            const existing = new Set(prev.map(a => a.id));
+            const nuevos = list.filter(a => !existing.has(a.id));
+            return [...nuevos, ...prev];
+          });
+        }
+      })
+      .catch(err => console.error('Error cargando alertas:', err));
+  }, []);
+
   useEffect(() => {
+    loadInitialAlerts();
+
     const client = new Client({
       brokerURL: WS_URL,
       reconnectDelay: 5000,
