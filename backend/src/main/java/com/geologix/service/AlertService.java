@@ -12,11 +12,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 /**
  * Evalúa las reglas operativas sobre las posiciones recibidas y genera alertas
- * cuando se detectan condiciones anómalas (exceso de velocidad, detención prolongada).
+ * cuando se detectan condiciones anómalas (exceso de velocidad, detención prolongada,
+ * entrada/salida de geofences).
  */
 @Service
 public class AlertService {
@@ -26,11 +28,14 @@ public class AlertService {
     private final AlertRepository alertRepository;
     private final RealtimePublisher publisher;
     private final SimulationProperties properties;
+    private final GeofenceService geofenceService;
 
-    public AlertService(AlertRepository alertRepository, RealtimePublisher publisher, SimulationProperties properties) {
+    public AlertService(AlertRepository alertRepository, RealtimePublisher publisher,
+                        SimulationProperties properties, GeofenceService geofenceService) {
         this.alertRepository = alertRepository;
         this.publisher = publisher;
         this.properties = properties;
+        this.geofenceService = geofenceService;
     }
 
     /**
@@ -41,6 +46,31 @@ public class AlertService {
     public void evaluar(Position position) {
         evaluarExcesoVelocidad(position);
         evaluarDetencionProlongada(position);
+        evaluarGeofences(position);
+    }
+
+    /**
+     * Evalúa las transiciones de geofences para un vehículo y genera alertas
+     * de ingreso/salida cuando el vehículo cruza los límites de una zona.
+     */
+    private void evaluarGeofences(Position position) {
+        List<GeofenceService.TransicionGeofence> transiciones =
+                geofenceService.evaluarTransiciones(
+                        position.getVehicle().getId(),
+                        position.getLatitude(),
+                        position.getLongitude()
+                );
+
+        for (GeofenceService.TransicionGeofence t : transiciones) {
+            AlertType tipo = "INGRESO".equals(t.tipo())
+                    ? AlertType.INGRESO_ZONA
+                    : AlertType.SALIDA_ZONA;
+            AlertSeverity severidad = "INGRESO".equals(t.tipo())
+                    ? AlertSeverity.BAJA
+                    : AlertSeverity.MEDIA;
+
+            crear(position.getVehicle(), tipo, severidad, t.mensaje());
+        }
     }
 
     private void evaluarExcesoVelocidad(Position position) {

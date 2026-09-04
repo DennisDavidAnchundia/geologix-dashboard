@@ -41,6 +41,12 @@
   },
   "map": {
     "speed": "Speed",
-    "vehicleLabel": "Vehicle"
+    "vehicleLabel": "Vehicle",
+    "geofences": "Zones",
+    "geofencesActive": "Zones visible",
+    "geofencesHidden": "Zones hidden"
+  },
+  "zones": {
+    "title": "Geographic Zones (Geofences)"
   }
 }

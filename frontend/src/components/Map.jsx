@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { GeofenceLayer } from './GeofenceLayer.jsx';
 
 const VEHICLE_COLORS = {
   1: '#3B82F6',
@@ -37,7 +38,7 @@ const createVehicleIcon = (color, speed) => {
 // Clave pendiente para mantener la ruta de un sólo vehículo seleccionado.
 let routeLine = null;
 
-export function Map({ vehicles, selectedVehicleId, onSelect, t }) {
+export function Map({ vehicles, selectedVehicleId, onSelect, t, geofencesVisible = true }) {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef({});
@@ -125,5 +126,10 @@ export function Map({ vehicles, selectedVehicleId, onSelect, t }) {
     return () => { cancelled = true; };
   }, [selectedVehicleId]);
 
-  return <div ref={mapRef} style={{ width: '100%', height: '100%' }} />;
+  return (
+    <>
+      <GeofenceLayer map={mapInstanceRef.current} visible={geofencesVisible} />
+      <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
+    </>
+  );
 }

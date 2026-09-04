@@ -11,6 +11,7 @@ function App() {
   const [initialVehicles, setInitialVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [mostrandoAlerts, setMostrandoAlerts] = useState(true);
+  const [geofencesVisible, setGeofencesVisible] = useState(true);
 
   useEffect(() => {
     const cargarFlota = async () => {
@@ -77,6 +78,13 @@ function App() {
           <button className="lang-switch" onClick={toggleLang}>
             {i18n.language === 'es' ? 'EN' : 'ES'}
           </button>
+          <button
+            className={`geofence-toggle ${geofencesVisible ? 'active' : ''}`}
+            onClick={() => setGeofencesVisible(v => !v)}
+            title={t('map.geofences')}
+          >
+            {t('map.geofences')}
+          </button>
           <select
             className="alerts-filter"
             value={mostrandoAlerts ? 'activas' : 'todas'}
@@ -115,6 +123,7 @@ function App() {
               selectedVehicleId={selectedVehicleId}
               onSelect={setSelectedVehicleId}
               t={mapT}
+              geofencesVisible={geofencesVisible}
             />
           </div>
 

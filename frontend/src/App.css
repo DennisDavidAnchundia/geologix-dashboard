@@ -352,6 +352,29 @@ body {
   background: var(--primary);
 }
 
+/* Geofence toggle */
+.geofence-toggle {
+  background: var(--bg);
+  color: var(--text-dim);
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.geofence-toggle.active {
+  background: var(--primary-light);
+  color: white;
+  border-color: var(--accent);
+}
+
+.geofence-toggle:hover {
+  border-color: var(--accent);
+}
+
 /* Left column (map + chart) */
 .left-col {
   flex: 1;
