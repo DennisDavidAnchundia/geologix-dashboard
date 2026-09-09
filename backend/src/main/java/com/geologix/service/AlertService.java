@@ -1,6 +1,8 @@
 package com.geologix.service;
 
 import com.geologix.config.SimulationProperties;
+import com.geologix.converter.EntityDtoConverter;
+import com.geologix.dto.AlertDto;
 import com.geologix.model.Alert;
 import com.geologix.model.AlertSeverity;
 import com.geologix.model.AlertType;
@@ -9,7 +11,9 @@ import com.geologix.model.Vehicle;
 import com.geologix.repository.AlertRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
@@ -29,13 +33,16 @@ public class AlertService {
     private final RealtimePublisher publisher;
     private final SimulationProperties properties;
     private final GeofenceService geofenceService;
+    private final EntityDtoConverter converter;
 
     public AlertService(AlertRepository alertRepository, RealtimePublisher publisher,
-                        SimulationProperties properties, GeofenceService geofenceService) {
+                        SimulationProperties properties, GeofenceService geofenceService,
+                        EntityDtoConverter converter) {
         this.alertRepository = alertRepository;
         this.publisher = publisher;
         this.properties = properties;
         this.geofenceService = geofenceService;
+        this.converter = converter;
     }
 
     /**
@@ -69,6 +76,8 @@ public class AlertService {
                     ? AlertSeverity.BAJA
                     : AlertSeverity.MEDIA;
 
+            // Las alertas quedan ACTIVAS hasta que un operador las atiende (Resolver).
+            // "Activas" = pendientes de atender: el contador sube con cada novedad.
             crear(position.getVehicle(), tipo, severidad, t.mensaje());
         }
     }
@@ -117,5 +126,32 @@ public class AlertService {
         return alertRepository.findByVehicleOrderByTimestampDesc(vehicle).stream()
                 .filter(a -> a.getTipo() == tipo && !a.isResuelta())
                 .findFirst();
+    }
+
+    /** Marca una alerta como resuelta (trabajo de operador). */
+    public AlertDto resolver(Long id) {
+        Alert alerta = alertRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Alerta no encontrada con id " + id));
+        alerta.setResuelta(true);
+        return converter.toAlertDto(alertRepository.save(alerta));
+    }
+
+    /** Resuelve TODAS las activas de una vez (cambio de turno / limpieza). Devuelve cuántas fueron. */
+    public long resolverTodas() {
+        var activas = alertRepository.findByResueltaFalseOrderByTimestampDesc();
+        activas.forEach(a -> a.setResuelta(true));
+        alertRepository.saveAll(activas);
+        return activas.size();
+    }
+
+    /** Al borrar una zona, se cierran sus alertas pendientes (si no, quedan huérfanas para siempre). */
+    public long resolverPorZona(String nombreZona) {
+        var huerfanas = alertRepository.findByResueltaFalseOrderByTimestampDesc().stream()
+                .filter(a -> a.getMensaje() != null && a.getMensaje().contains(nombreZona))
+                .toList();
+        huerfanas.forEach(a -> a.setResuelta(true));
+        alertRepository.saveAll(huerfanas);
+        return huerfanas.size();
     }
 }

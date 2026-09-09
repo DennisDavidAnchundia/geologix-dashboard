@@ -16,11 +16,17 @@
     "deliveries": "On-time deliveries"
   },
   "alerts": {
-    "title": "Real-time Alerts",
+    "title": "Alerts",
     "active": "Active alerts",
     "empty": "No alerts",
     "filterActive": "Active only",
     "filterAll": "All",
+    "tabActive": "Active",
+    "tabHistory": "History",
+    "resolve": "Resolve",
+    "resolveAll": "Resolve all",
+    "resolved": "Resolved",
+    "refresh": "Refresh",
     "severity": {
       "ALTA": "High",
       "MEDIA": "Medium",
@@ -47,6 +53,31 @@
     "geofencesHidden": "Zones hidden"
   },
   "zones": {
-    "title": "Geographic Zones (Geofences)"
+    "title": "Geographic Zones (Geofences)",
+    "draw": "Draw zone",
+    "drawHint": "Click on the map to add vertices ({{n}} so far). Minimum 3.",
+    "drawing": "Drawing mode: click on the map to add vertices ({{n}}).",
+    "name": "Name",
+    "type": "Type",
+    "color": "Color",
+    "save": "Save zone",
+    "cancel": "Cancel",
+    "minPoints": "Add at least 3 points on the map.",
+    "nameRequired": "The zone needs a name.",
+    "toggle": "Enable/disable",
+    "delete": "Delete",
+    "deleteConfirm": "Delete zone"
+  },
+  "nav": {
+    "fleet": "Fleet",
+    "alerts": "Alerts",
+    "zones": "Zones"
+  },
+  "auth": {
+    "user": "Username",
+    "password": "Password",
+    "login": "Sign in",
+    "logout": "Sign out",
+    "hint": "Demo: admin / geologix123 (manage) · operador / geologix123 (view only)"
   }
 }

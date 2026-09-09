@@ -14,6 +14,9 @@ public interface AlertRepository extends JpaRepository<Alert, Long> {
     /** Alertas no resueltas (activas). */
     List<Alert> findByResueltaFalseOrderByTimestampDesc();
 
+    /** Conteo de alertas no resueltas (para badges/KPIs sin traer la lista). */
+    long countByResueltaFalse();
+
     /** Todas las alertas, ordenadas de la más reciente a la más antigua. */
     List<Alert> findAllByOrderByTimestampDesc();
 }

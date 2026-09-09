@@ -1,4 +1,5 @@
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
 
 // Configuración de Vite para GeoLogix Dashboard
@@ -6,7 +7,7 @@ import { defineConfig } from 'vite'
 // - Proxy de desarrollo: redirige /api y /ws al backend (Spring Boot en :8080)
 //   para evitar errores de CORS durante el desarrollo.
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   server: {
     port: 5173,
     proxy: {

@@ -16,11 +16,17 @@
     "deliveries": "Entregas a tiempo"
   },
   "alerts": {
-    "title": "Alertas en Tiempo Real",
+    "title": "Alertas",
     "active": "Alertas activas",
     "empty": "Sin alertas",
     "filterActive": "Solo activas",
     "filterAll": "Todas",
+    "tabActive": "Activas",
+    "tabHistory": "Historial",
+    "resolve": "Resolver",
+    "resolveAll": "Resolver todas",
+    "resolved": "Resuelta",
+    "refresh": "Actualizar",
     "severity": {
       "ALTA": "Alta",
       "MEDIA": "Media",
@@ -47,6 +53,31 @@
     "geofencesHidden": "Zonas ocultas"
   },
   "zones": {
-    "title": "Zonas Geográficas (Geofences)"
+    "title": "Zonas Geográficas (Geofences)",
+    "draw": "Dibujar zona",
+    "drawHint": "Click en el mapa para agregar vértices (llevas {{n}}). Mínimo 3.",
+    "drawing": "Modo dibujo: click en el mapa para agregar vértices ({{n}}).",
+    "name": "Nombre",
+    "type": "Tipo",
+    "color": "Color",
+    "save": "Guardar zona",
+    "cancel": "Cancelar",
+    "minPoints": "Agrega al menos 3 puntos en el mapa.",
+    "nameRequired": "La zona necesita un nombre.",
+    "toggle": "Activar/desactivar",
+    "delete": "Eliminar",
+    "deleteConfirm": "¿Eliminar la zona"
+  },
+  "nav": {
+    "fleet": "Flota",
+    "alerts": "Alertas",
+    "zones": "Zonas"
+  },
+  "auth": {
+    "user": "Usuario",
+    "password": "Contraseña",
+    "login": "Entrar",
+    "logout": "Salir",
+    "hint": "Demo: admin / geologix123 (gestión) · operador / geologix123 (solo monitoreo)"
   }
 }

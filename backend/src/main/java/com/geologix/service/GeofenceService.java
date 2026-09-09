@@ -2,8 +2,20 @@ package com.geologix.service;
 
 import com.geologix.converter.EntityDtoConverter;
 import com.geologix.dto.GeofenceDto;
+import com.geologix.dto.GeofenceRequest;
 import com.geologix.model.Geofence;
+import com.geologix.model.ZonaTipo;
 import com.geologix.repository.GeofenceRepository;
+import org.geolatte.geom.G2D;
+import org.geolatte.geom.Polygon;
+import org.geolatte.geom.crs.CoordinateReferenceSystems;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import static org.geolatte.geom.builder.DSL.g;
+import static org.geolatte.geom.builder.DSL.polygon;
+import static org.geolatte.geom.builder.DSL.ring;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -104,6 +116,133 @@ public class GeofenceService {
      */
     public boolean estaDentroDeZona(double longitude, double latitude) {
         return geofenceRepository.estaDentroDeZona(longitude, latitude);
+    }
+
+    // ---------- CRUD (Pack Altura 5.6) ----------
+
+    public GeofenceDto crear(GeofenceRequest req) {
+        Geofence gf = Geofence.builder()
+                .nombre(validarNombre(req.nombre()))
+                .tipo(validarTipo(req.tipo()))
+                .geom(validarYConstruirPoligono(req.coordenadas()))
+                .color(validarColor(req.color()))
+                .activa(req.activa() == null || req.activa())
+                .build();
+        return converter.toGeofenceDto(geofenceRepository.save(gf));
+    }
+
+    public GeofenceDto actualizar(Long id, GeofenceRequest req) {
+        Geofence gf = buscar(id);
+        gf.setNombre(validarNombre(req.nombre()));
+        gf.setTipo(validarTipo(req.tipo()));
+        gf.setGeom(validarYConstruirPoligono(req.coordenadas()));
+        if (req.color() != null) {
+            gf.setColor(validarColor(req.color()));
+        }
+        if (req.activa() != null) {
+            gf.setActiva(req.activa());
+        }
+        limpiarEstadoMemoria(id);
+        return converter.toGeofenceDto(geofenceRepository.save(gf));
+    }
+
+    public void eliminar(Long id) {
+        Geofence gf = buscar(id);
+        geofenceRepository.delete(gf);
+        limpiarEstadoMemoria(id);
+    }
+
+    public GeofenceDto obtener(Long id) {
+        return converter.toGeofenceDto(buscar(id));
+    }
+
+    public GeofenceDto cambiarActiva(Long id, boolean activa) {
+        Geofence gf = buscar(id);
+        gf.setActiva(activa);
+        limpiarEstadoMemoria(id);
+        return converter.toGeofenceDto(geofenceRepository.save(gf));
+    }
+
+    private Geofence buscar(Long id) {
+        return geofenceRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Geofence no encontrada con id " + id));
+    }
+
+    /** Al editar/borrar una zona, el estado en memoria queda obsoleto → se purga. */
+    private void limpiarEstadoMemoria(Long geofenceId) {
+        estadoVehiculoGeofence.keySet().removeIf(k -> k.endsWith(":" + geofenceId));
+    }
+
+    private String validarNombre(String nombre) {
+        if (nombre == null || nombre.isBlank() || nombre.trim().length() > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Nombre requerido (1-100 caracteres)");
+        }
+        return nombre.trim();
+    }
+
+    private ZonaTipo validarTipo(String tipo) {
+        if (tipo == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Tipo requerido (ALMACEN, ZONA_REPARTO, RESTRINGIDA, COBERTURA)");
+        }
+        try {
+            return ZonaTipo.valueOf(tipo.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Tipo inválido: " + tipo);
+        }
+    }
+
+    private String validarColor(String color) {
+        if (color == null || color.isBlank()) {
+            return "#38BDF8";
+        }
+        if (!color.trim().matches("^#[0-9A-Fa-f]{6}$")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Color inválido (formato #RRGGBB)");
+        }
+        return color.trim();
+    }
+
+    /**
+     * Valida el anillo [lon,lat] y lo convierte a Polygon WGS84.
+     * Mínimo 3 vértices distintos; se cierra automáticamente.
+     */
+    private Polygon validarYConstruirPoligono(java.util.List<java.util.List<Double>> coords) {
+        if (coords == null || coords.size() < 3) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Se requieren al menos 3 puntos [lon, lat]");
+        }
+        var puntos = new java.util.ArrayList<G2D>();
+        for (var par : coords) {
+            if (par == null || par.size() != 2 || par.get(0) == null || par.get(1) == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Cada punto debe ser [lon, lat]");
+            }
+            double lon = par.get(0);
+            double lat = par.get(1);
+            if (lon < -180 || lon > 180 || lat < -90 || lat > 90) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Coordenada fuera de rango: [" + lon + ", " + lat + "]");
+            }
+            puntos.add(new G2D(lon, lat));
+        }
+        // Cerrar el anillo si no está cerrado.
+        if (!puntos.get(0).equals(puntos.get(puntos.size() - 1))) {
+            puntos.add(puntos.get(0));
+        }
+        if (puntos.size() < 4) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Se requieren al menos 3 vértices distintos");
+        }
+        try {
+            return polygon(CoordinateReferenceSystems.WGS84, ring(puntos.toArray(new G2D[0])));
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Polígono inválido: " + e.getMessage());
+        }
     }
 
     /** Resultado de una transición geofence detectada. */

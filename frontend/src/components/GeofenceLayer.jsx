@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
+import { apiFetch } from '../auth/api.js';
 
 const ZONA_COLORS = {
   ALMACEN: '#10B981',
@@ -8,12 +9,12 @@ const ZONA_COLORS = {
   COBERTURA: '#8B5CF6'
 };
 
-export function GeofenceLayer({ map, visible }) {
+export function GeofenceLayer({ map, visible, refreshKey = 0 }) {
   const [geofences, setGeofences] = useState([]);
   const layerRef = useRef([]);
 
   useEffect(() => {
-    fetch('/api/geofences')
+    apiFetch('/api/geofences')
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -21,7 +22,7 @@ export function GeofenceLayer({ map, visible }) {
         }
       })
       .catch(err => console.error('Error cargando geofences:', err));
-  }, []);
+  }, [refreshKey]);
 
   useEffect(() => {
     if (!map) return;
@@ -41,15 +42,16 @@ export function GeofenceLayer({ map, visible }) {
       const polygon = L.polygon(latlngs, {
         color: color,
         fillColor: color,
-        fillOpacity: 0.15,
+        fillOpacity: gf.activa ? 0.15 : 0.05,
         weight: 2,
-        dashArray: gf.tipo === 'RESTRINGIDA' ? '6, 4' : null
+        dashArray: gf.tipo === 'RESTRINGIDA' ? '6, 4' : (gf.activa ? null : '3, 4')
       }).addTo(map);
 
       polygon.bindPopup(`
         <div style="font-family: 'Segoe UI', sans-serif; min-width: 150px;">
           <strong style="font-size: 14px;">${gf.nombre}</strong><br/>
-          <span style="color: #666; font-size: 12px;">${gf.tipo.replace(/_/g, ' ')}</span>
+          <span style="color: #666; font-size: 12px;">${gf.tipo.replace(/_/g, ' ')}</span><br/>
+          <span style="color: #999; font-size: 11px;">${gf.activa ? 'Activa' : 'Inactiva'}</span>
         </div>
       `);
 
@@ -63,7 +65,9 @@ export function GeofenceLayer({ map, visible }) {
     });
 
     return () => {
-      layerRef.current.forEach(layer => map.removeLayer(layer));
+      layerRef.current.forEach(layer => {
+        try { map.removeLayer(layer); } catch { /* mapa ya destruido */ }
+      });
       layerRef.current = [];
     };
   }, [map, geofences, visible]);
