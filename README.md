@@ -94,6 +94,22 @@ npm run dev
 
 ---
 
+## 🐳 Despliegue
+
+### Todo con Docker (un comando)
+```bash
+cp .env.example .env   # completar secretos
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
+```
+Abre `http://localhost/` (frontend) — el nginx reenvía `/api` y `/ws` al backend.
+Login demo: `admin / geologix123`.
+
+### AWS capa gratuita ($0)
+Ver `infra/aws/README.md`: EC2 `t3.micro` con `user-data.sh` (levanta todo solo),
+o frontend en S3 + backend en EC2. Poner Billing Alert desde el día 1.
+
+---
+
 ## 📄 Licencia
 
 Proyecto de portafolio personal. Uso educativo/demostrativo.

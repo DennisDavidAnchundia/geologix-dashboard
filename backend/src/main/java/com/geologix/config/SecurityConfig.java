@@ -2,6 +2,7 @@ package com.geologix.config;
 
 import com.geologix.security.JwtAuthFilter;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;import org.springframework.security.authentication.AuthenticationManager;
@@ -29,9 +30,12 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final String extraOrigins;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter,
+                          @Value("${cors.allowed-origins:}") String extraOrigins) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.extraOrigins = extraOrigins;
     }
 
     @Bean
@@ -61,7 +65,18 @@ public class SecurityConfig {
     public CorsConfigurationSource corsSource() {
         CorsConfiguration cfg = new CorsConfiguration();
         // Vite dev + build servido por el mismo origen en prod.
-        cfg.setAllowedOriginPatterns(List.of("http://localhost:*", "http://127.0.0.1:*"));
+        var origins = new java.util.ArrayList<>(
+                java.util.List.of("http://localhost:*", "http://127.0.0.1:*"));
+        // Orígenes extra de prod (frontend separado, ej. S3). Separados por coma.
+        if (extraOrigins != null && !extraOrigins.isBlank()) {
+            for (String o : extraOrigins.split(",")) {
+                String t = o.trim();
+                if (!t.isEmpty()) {
+                    origins.add(t);
+                }
+            }
+        }
+        cfg.setAllowedOriginPatterns(origins);
         cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         cfg.setAllowedHeaders(List.of("*"));
         cfg.setAllowCredentials(false);

@@ -1,5 +1,9 @@
 // Utilidades de autenticación: guarda el JWT y lo adjunta a cada petición API.
 
+// En prod tras nginx: vacío (mismo origen). Con frontend separado (S3):
+// VITE_API_URL=https://api.midominio.com
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+
 const TOKEN_KEY = 'geologix_token';
 const USER_KEY = 'geologix_user';
 
@@ -39,7 +43,7 @@ export async function apiFetch(path, options = {}) {
   if (options.body && !headers['Content-Type']) {
     headers['Content-Type'] = 'application/json';
   }
-  const res = await fetch(path, { ...options, headers });
+  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
   if (res.status === 401 && getToken()) {
     // Había sesión y expiró/falló → limpiar y volver al login.
     clearSession();
@@ -50,7 +54,7 @@ export async function apiFetch(path, options = {}) {
 }
 
 export async function login(username, password) {
-  const res = await fetch('/api/auth/login', {
+  const res = await fetch(`${API_BASE}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password })
