@@ -118,7 +118,7 @@ public class GeofenceService {
         return geofenceRepository.estaDentroDeZona(longitude, latitude);
     }
 
-    // ---------- CRUD (Pack Altura 5.6) ----------
+    // ---------- CRUD de zonas ----------
 
     public GeofenceDto crear(GeofenceRequest req) {
         Geofence gf = Geofence.builder()
