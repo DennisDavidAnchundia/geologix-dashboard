@@ -11,4 +11,6 @@ FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 COPY --from=build /app/target/backend-*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Render free = 512MB RAM: heap recortado, respeta PORT y JAVA_OPTS.
+ENV JAVA_OPTS="-Xms128m -Xmx300m -XX:+UseSerialGC"
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

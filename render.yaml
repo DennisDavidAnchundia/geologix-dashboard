@@ -1,0 +1,23 @@
+# GeoLogix — backend en Render free (Docker) + DB externa Supabase + front en Vercel.
+# Conectar el repo en https://dashboard.render.com → New → Blueprint → selecciona este archivo.
+services:
+  - type: web
+    name: geologix-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        sync: false # jdbc:postgresql://db.XXXX.supabase.co:5432/postgres?sslmode=require
+      - key: SPRING_DATASOURCE_USER
+        sync: false # postgres
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      - key: SECURITY_JWT_SECRET
+        generateValue: true # >=32 chars, Render lo genera solo
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false # https://tu-app.vercel.app (sin barra final)
+      - key: JAVA_OPTS
+        value: -Xms128m -Xmx300m -XX:+UseSerialGC
